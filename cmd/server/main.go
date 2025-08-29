@@ -32,8 +32,8 @@ func main() {
 	defer db.Close()
 
 	// Initialize Redis
-	redisClient := initRedis(cfg)
-	defer redisClient.Close()
+	//redisClient := initRedis(cfg)
+	//defer redisClient.Close()
 
 	// Initialize repositories
 	userRepo := database.NewUserRepository(db)
