@@ -68,7 +68,7 @@ func main() {
 	}
 }
 
-// initDatabase initializes PostgreSQL connection
+// initDatabase initializes Postgres connection
 func initDatabase(cfg *config.Config) (*sql.DB, error) {
 	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
