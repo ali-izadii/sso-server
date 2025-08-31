@@ -15,11 +15,11 @@ type TokenRepository interface {
 	RevokeAccessToken(ctx context.Context, token string) error
 	RevokeAccessTokenByID(ctx context.Context, id uuid.UUID) error
 
-	//CreateRefreshToken(ctx context.Context, token *models.RefreshToken) error
-	//GetRefreshToken(ctx context.Context, token string) (*models.RefreshToken, error)
+	//CreateRefreshToken(ctx context.Context, tokens *models.RefreshToken) error
+	//GetRefreshToken(ctx context.Context, tokens string) (*models.RefreshToken, error)
 	//GetRefreshTokenByID(ctx context.Context, id uuid.UUID) (*models.RefreshToken, error)
-	//UpdateRefreshToken(ctx context.Context, token *models.RefreshToken) error
-	//RevokeRefreshToken(ctx context.Context, token string) error
+	//UpdateRefreshToken(ctx context.Context, tokens *models.RefreshToken) error
+	//RevokeRefreshToken(ctx context.Context, tokens string) error
 	//RevokeRefreshTokenByID(ctx context.Context, id uuid.UUID) error
 	//
 	//GetAccessTokensByUserID(ctx context.Context, userID uuid.UUID) ([]*models.AccessToken, error)
@@ -33,8 +33,8 @@ type TokenRepository interface {
 	//DeleteExpiredTokens(ctx context.Context) (int64, error) // Returns number of deleted tokens
 	//DeleteRevokedTokens(ctx context.Context, olderThan time.Time) (int64, error)
 	//
-	//ValidateAccessToken(ctx context.Context, token string) (*models.AccessToken, error)
-	//ValidateRefreshToken(ctx context.Context, token string) (*models.RefreshToken, error)
+	//ValidateAccessToken(ctx context.Context, tokens string) (*models.AccessToken, error)
+	//ValidateRefreshToken(ctx context.Context, tokens string) (*models.RefreshToken, error)
 	//
 	//CountActiveTokens(ctx context.Context) (int64, error)
 	//CountTokensByUser(ctx context.Context, userID uuid.UUID) (int64, int64, error) // access, refresh counts

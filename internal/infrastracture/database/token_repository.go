@@ -23,7 +23,7 @@ func NewTokenRepository(db *sql.DB) repositories.TokenRepository {
 
 func (r *tokenRepository) CreateAccessToken(ctx context.Context, token *models.AccessToken) error {
 	query := `
-		INSERT INTO access_tokens (id, token, user_id, application_id, scopes, expires_at, revoked, created_at)
+		INSERT INTO access_tokens (id, tokens, user_id, application_id, scopes, expires_at, revoked, created_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	`
 
@@ -42,9 +42,9 @@ func (r *tokenRepository) CreateAccessToken(ctx context.Context, token *models.A
 
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
-			return fmt.Errorf("access token already exists: %w", err)
+			return fmt.Errorf("access tokens already exists: %w", err)
 		}
-		return fmt.Errorf("failed to create access token: %w", err)
+		return fmt.Errorf("failed to create access tokens: %w", err)
 	}
 
 	return nil
@@ -52,9 +52,9 @@ func (r *tokenRepository) CreateAccessToken(ctx context.Context, token *models.A
 
 func (r *tokenRepository) GetAccessToken(ctx context.Context, token string) (*models.AccessToken, error) {
 	query := `
-		SELECT id, token, user_id, application_id, scopes, expires_at, revoked, created_at
+		SELECT id, tokens, user_id, application_id, scopes, expires_at, revoked, created_at
 		FROM access_tokens
-		WHERE token = $1
+		WHERE tokens = $1
 	`
 
 	accessToken := &models.AccessToken{}
@@ -73,7 +73,7 @@ func (r *tokenRepository) GetAccessToken(ctx context.Context, token string) (*mo
 		if err == sql.ErrNoRows {
 			return nil, models.ErrTokenNotFound
 		}
-		return nil, fmt.Errorf("failed to get access token: %w", err)
+		return nil, fmt.Errorf("failed to get access tokens: %w", err)
 	}
 
 	return accessToken, nil
@@ -81,7 +81,7 @@ func (r *tokenRepository) GetAccessToken(ctx context.Context, token string) (*mo
 
 func (r *tokenRepository) GetAccessTokenByID(ctx context.Context, id uuid.UUID) (*models.AccessToken, error) {
 	query := `
-		SELECT id, token, user_id, application_id, scopes, expires_at, revoked, created_at
+		SELECT id, tokens, user_id, application_id, scopes, expires_at, revoked, created_at
 		FROM access_tokens
 		WHERE id = $1
 	`
@@ -102,7 +102,7 @@ func (r *tokenRepository) GetAccessTokenByID(ctx context.Context, id uuid.UUID) 
 		if err == sql.ErrNoRows {
 			return nil, models.ErrTokenNotFound
 		}
-		return nil, fmt.Errorf("failed to get access token by ID: %w", err)
+		return nil, fmt.Errorf("failed to get access tokens by ID: %w", err)
 	}
 
 	return accessToken, nil
@@ -125,7 +125,7 @@ func (r *tokenRepository) UpdateAccessToken(ctx context.Context, token *models.A
 	)
 
 	if err != nil {
-		return fmt.Errorf("failed to update access token: %w", err)
+		return fmt.Errorf("failed to update access tokens: %w", err)
 	}
 
 	rowsAffected, err := result.RowsAffected()
@@ -144,12 +144,12 @@ func (r *tokenRepository) RevokeAccessToken(ctx context.Context, token string) e
 	query := `
 		UPDATE access_tokens 
 		SET revoked = true
-		WHERE token = $1
+		WHERE tokens = $1
 	`
 
 	result, err := r.db.ExecContext(ctx, query, token)
 	if err != nil {
-		return fmt.Errorf("failed to revoke access token: %w", err)
+		return fmt.Errorf("failed to revoke access tokens: %w", err)
 	}
 
 	rowsAffected, err := result.RowsAffected()
@@ -173,7 +173,7 @@ func (r *tokenRepository) RevokeAccessTokenByID(ctx context.Context, id uuid.UUI
 
 	_, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
-		return fmt.Errorf("failed to revoke access token by ID: %w", err)
+		return fmt.Errorf("failed to revoke access tokens by ID: %w", err)
 	}
 	return nil
 }
