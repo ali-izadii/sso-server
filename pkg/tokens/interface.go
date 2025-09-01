@@ -2,13 +2,17 @@ package tokens
 
 import (
 	"context"
-	"sso-server/internal/domain/models"
 	"time"
 
 	"github.com/google/uuid"
 )
 
 type TokenType string
+
+const (
+	AccessTokenType  TokenType = "access_token"
+	RefreshTokenType TokenType = "refresh_token"
+)
 
 type CreateTokenRequest struct {
 	UserID        uuid.UUID
@@ -30,6 +34,18 @@ type TokenClaims interface {
 	ToMap() map[string]interface{}
 }
 
+type TokenResponse struct {
+	Token     string
+	TokenType string
+	ExpiresAt time.Time
+	ExpiresIn int64
+}
+
+type TokenPair struct {
+	AccessToken  TokenResponse
+	RefreshToken TokenResponse
+}
+
 type TokenValidationResult struct {
 	Valid         bool
 	Claims        TokenClaims
@@ -40,6 +56,18 @@ type TokenValidationResult struct {
 	ApplicationID uuid.UUID
 	Scopes        []string
 }
+
+type TokenError struct {
+	Code    string
+	Message string
+	Cause   error
+}
+
+const (
+	ErrTokenExpired = "TOKEN_EXPIRED"
+	ErrTokenInvalid = "TOKEN_INVALID"
+	ErrTokenRevoked = "TOKEN_REVOKED"
+)
 
 type TokenProvider interface {
 	// GenerateAccessToken Token Generation
@@ -81,15 +109,15 @@ type TokenManager interface {
 	// GetDefaultProvider RegisterProvider Provider Management
 	GetDefaultProvider() TokenProvider
 	// CreateTokenPair Token Operations (uses default provider)
-	CreateTokenPair(ctx context.Context, req CreateTokenRequest) (*models.TokenPair, error)
+	CreateTokenPair(ctx context.Context, req CreateTokenRequest) (*TokenPair, error)
 	// ValidateToken Token Operations (uses default provider)
 	ValidateToken(ctx context.Context, tokenString string) (*TokenValidationResult, error)
 	// RefreshTokens Token Operations (uses default provider)
-	RefreshTokens(ctx context.Context, refreshTokenString string) (*models.TokenPair, error)
+	RefreshTokens(ctx context.Context, refreshTokenString string) (*TokenPair, error)
 	// RevokeToken Token Operations (uses default provider)
 	RevokeToken(ctx context.Context, tokenString string) error
 	// CreateTokenPairWithProvider create a pair of tokens with a specific provider
-	CreateTokenPairWithProvider(ctx context.Context, providerType TokenProviderType, req CreateTokenRequest) (*models.TokenPair, error)
+	CreateTokenPairWithProvider(ctx context.Context, providerType TokenProviderType, req CreateTokenRequest) (*TokenPair, error)
 	// ValidateTokenWithProvider validate a pair of tokens with a specific provider
 	ValidateTokenWithProvider(ctx context.Context, providerType TokenProviderType, tokenString string) (*TokenValidationResult, error)
 }
@@ -180,34 +208,34 @@ type TokenAnalytics interface {
 }
 
 type TokenStats struct {
-	TotalActive  int64                       `json:"total_active"`
-	TotalExpired int64                       `json:"total_expired"`
-	TotalRevoked int64                       `json:"total_revoked"`
-	ByProvider   map[TokenProviderType]int64 `json:"by_provider"`
-	ByTokenType  map[TokenType]int64         `json:"by_token_type"`
+	TotalActive  int64
+	TotalExpired int64
+	TotalRevoked int64
+	ByProvider   map[TokenProviderType]int64
+	ByTokenType  map[TokenType]int64
 }
 
 type UserTokenStats struct {
-	UserID       uuid.UUID                   `json:"user_id"`
-	ActiveTokens int64                       `json:"active_tokens"`
-	ByProvider   map[TokenProviderType]int64 `json:"by_provider"`
-	ByTokenType  map[TokenType]int64         `json:"by_token_type"`
-	LastActivity time.Time                   `json:"last_activity"`
+	UserID       uuid.UUID
+	ActiveTokens int64
+	ByProvider   map[TokenProviderType]int64
+	ByTokenType  map[TokenType]int64
+	LastActivity time.Time
 }
 
 type ApplicationTokenStats struct {
-	ApplicationID uuid.UUID                   `json:"application_id"`
-	ActiveTokens  int64                       `json:"active_tokens"`
-	ByProvider    map[TokenProviderType]int64 `json:"by_provider"`
-	ByTokenType   map[TokenType]int64         `json:"by_token_type"`
-	LastActivity  time.Time                   `json:"last_activity"`
+	ApplicationID uuid.UUID
+	ActiveTokens  int64
+	ByProvider    map[TokenProviderType]int64
+	ByTokenType   map[TokenType]int64
+	LastActivity  time.Time
 }
 
 type ProviderTokenStats struct {
-	ProviderType  TokenProviderType   `json:"provider_type"`
-	ActiveTokens  int64               `json:"active_tokens"`
-	ByTokenType   map[TokenType]int64 `json:"by_token_type"`
-	AverageExpiry time.Duration       `json:"average_expiry"`
+	ProviderType  TokenProviderType
+	ActiveTokens  int64
+	ByTokenType   map[TokenType]int64
+	AverageExpiry time.Duration
 }
 
 type TokenRouter interface {

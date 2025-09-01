@@ -7,11 +7,6 @@ import (
 	"github.com/google/uuid"
 )
 
-const (
-	AccessTokenType  TokenType = "access_token"
-	RefreshTokenType TokenType = "refresh_token"
-)
-
 type AccessToken struct {
 	ID            uuid.UUID `db:"id"`
 	Token         string    `db:"tokens"`
@@ -68,18 +63,6 @@ func (rt *RefreshToken) IsExpired() bool {
 
 func (rt *RefreshToken) IsValid() bool {
 	return !rt.IsExpired() && !rt.Revoked
-}
-
-type TokenResponse struct {
-	Token     string
-	TokenType string
-	ExpiresAt time.Time
-	ExpiresIn int64
-}
-
-type TokenPair struct {
-	AccessToken  TokenResponse
-	RefreshToken TokenResponse
 }
 
 type OAuthTokenRequest struct {
