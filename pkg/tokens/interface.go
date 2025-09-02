@@ -33,8 +33,8 @@ type TokenClaims interface {
 	GetScopes() []string
 	GetTokenType() TokenType
 	GetTokenID() uuid.UUID
-	GetExpiresAt() time.Time
-	GetIssuedAt() time.Time
+	GeTokenExpirationTime() time.Time
+	GetTokenIssuedAt() time.Time
 	IsExpired() bool
 	ToMap() map[string]interface{}
 }

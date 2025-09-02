@@ -1,4 +1,3 @@
-// pkg/tokens/jwt/claims.go
 package jwt
 
 import (
@@ -9,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type JWTClaims struct {
+type CustomJwtClaims struct {
 	UserID        uuid.UUID
 	ApplicationID uuid.UUID
 	Email         string
@@ -22,55 +21,55 @@ type JWTClaims struct {
 	jwt.RegisteredClaims
 }
 
-func (c *JWTClaims) GetUserID() uuid.UUID {
+func (c *CustomJwtClaims) GetUserID() uuid.UUID {
 	return c.UserID
 }
 
-func (c *JWTClaims) GetApplicationID() uuid.UUID {
+func (c *CustomJwtClaims) GetApplicationID() uuid.UUID {
 	return c.ApplicationID
 }
 
-func (c *JWTClaims) GetEmail() string {
+func (c *CustomJwtClaims) GetEmail() string {
 	return c.Email
 }
 
-func (c *JWTClaims) GetScopes() []string {
+func (c *CustomJwtClaims) GetScopes() []string {
 	if c.Scopes == nil {
 		return []string{}
 	}
 	return c.Scopes
 }
 
-func (c *JWTClaims) GetTokenType() tokens.TokenType {
+func (c *CustomJwtClaims) GetTokenType() tokens.TokenType {
 	return c.TokenType
 }
 
-func (c *JWTClaims) GetTokenID() uuid.UUID {
+func (c *CustomJwtClaims) GetTokenID() uuid.UUID {
 	return c.TokenID
 }
 
-func (c *JWTClaims) GetExpiresAt() time.Time {
+func (c *CustomJwtClaims) GeTokenExpirationTime() time.Time {
 	if c.ExpiresAt == nil {
 		return time.Time{}
 	}
 	return c.ExpiresAt.Time
 }
 
-func (c *JWTClaims) GetIssuedAt() time.Time {
+func (c *CustomJwtClaims) GetTokenIssuedAt() time.Time {
 	if c.IssuedAt == nil {
 		return time.Time{}
 	}
 	return c.IssuedAt.Time
 }
 
-func (c *JWTClaims) IsExpired() bool {
+func (c *CustomJwtClaims) IsExpired() bool {
 	if c.ExpiresAt == nil {
 		return false
 	}
 	return time.Now().After(c.ExpiresAt.Time)
 }
 
-func (c *JWTClaims) ToMap() map[string]interface{} {
+func (c *CustomJwtClaims) ToMap() map[string]interface{} {
 	result := map[string]interface{}{
 		"user_id":        c.UserID.String(),
 		"application_id": c.ApplicationID.String(),
@@ -119,29 +118,29 @@ func (c *JWTClaims) ToMap() map[string]interface{} {
 	return result
 }
 
-func (c *JWTClaims) GetAccessTokenID() *uuid.UUID {
+func (c *CustomJwtClaims) GetAccessTokenID() *uuid.UUID {
 	return c.AccessTokenID
 }
 
-func (c *JWTClaims) GetRefreshSecret() string {
+func (c *CustomJwtClaims) GetRefreshSecret() string {
 	return c.RefreshSecret
 }
 
-func (c *JWTClaims) GetCustomClaim(key string) interface{} {
+func (c *CustomJwtClaims) GetCustomClaim(key string) interface{} {
 	if c.CustomClaims == nil {
 		return nil
 	}
 	return c.CustomClaims[key]
 }
 
-func (c *JWTClaims) SetCustomClaim(key string, value interface{}) {
+func (c *CustomJwtClaims) SetCustomClaim(key string, value interface{}) {
 	if c.CustomClaims == nil {
 		c.CustomClaims = make(map[string]interface{})
 	}
 	c.CustomClaims[key] = value
 }
 
-func (c *JWTClaims) HasScope(scope string) bool {
+func (c *CustomJwtClaims) HasScope(scope string) bool {
 	for _, s := range c.Scopes {
 		if s == scope {
 			return true
@@ -150,7 +149,7 @@ func (c *JWTClaims) HasScope(scope string) bool {
 	return false
 }
 
-func (c *JWTClaims) HasAllScopes(requiredScopes []string) bool {
+func (c *CustomJwtClaims) HasAllScopes(requiredScopes []string) bool {
 	for _, required := range requiredScopes {
 		if !c.HasScope(required) {
 			return false
@@ -159,7 +158,7 @@ func (c *JWTClaims) HasAllScopes(requiredScopes []string) bool {
 	return true
 }
 
-func (c *JWTClaims) HasAnyScope(requiredScopes []string) bool {
+func (c *CustomJwtClaims) HasAnyScope(requiredScopes []string) bool {
 	for _, required := range requiredScopes {
 		if c.HasScope(required) {
 			return true
@@ -168,8 +167,8 @@ func (c *JWTClaims) HasAnyScope(requiredScopes []string) bool {
 	return false
 }
 
-func (c *JWTClaims) Clone() *JWTClaims {
-	clone := &JWTClaims{
+func (c *CustomJwtClaims) Clone() *CustomJwtClaims {
+	clone := &CustomJwtClaims{
 		UserID:        c.UserID,
 		ApplicationID: c.ApplicationID,
 		Email:         c.Email,

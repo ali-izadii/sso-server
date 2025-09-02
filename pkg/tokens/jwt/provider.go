@@ -19,7 +19,7 @@ func (p Provider) GenerateAccessToken(ctx context.Context, req tokens.CreateToke
 	now := time.Now()
 	expiresAt := now.Add(p.config.AccessTokenExpiry)
 
-	claims := &JWTClaims{
+	claims := &CustomJwtClaims{
 		UserID:        req.UserID,
 		ApplicationID: req.ApplicationID,
 		Email:         req.Email,
@@ -45,7 +45,7 @@ func (p Provider) GenerateAccessToken(ctx context.Context, req tokens.CreateToke
 	return tokenString, claims, nil
 }
 
-func (p Provider) signToken(claims *JWTClaims) (string, error) {
+func (p Provider) signToken(claims *CustomJwtClaims) (string, error) {
 	var method jwt.SigningMethod
 	switch p.config.Algorithm {
 	case "HS256", "":
@@ -58,7 +58,7 @@ func (p Provider) signToken(claims *JWTClaims) (string, error) {
 		return "", fmt.Errorf("unsupported signing algorithm: %s", p.config.Algorithm)
 	}
 
-	token := jwt.NewWithClaims(method, claims.RegisteredClaims)
+	token := jwt.NewWithClaims(method, claims)
 
 	if keyID := p.getKeyID(); keyID != "" {
 		token.Header["kid"] = keyID
