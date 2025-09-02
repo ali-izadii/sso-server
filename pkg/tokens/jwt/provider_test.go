@@ -27,7 +27,7 @@ func TestProvider_GenerateAccessToken(t *testing.T) {
 				AccessTokenExpiry: time.Hour,
 				Issuer:            "test-issuer",
 				Algorithm:         "",
-				SecretKey:         "test-secret-key-at-least-256-bits",
+				SecretKey:         []byte("test-secret-key-at-least-256-bits"),
 			},
 			request: tokens.CreateTokenRequest{
 				UserID:        uuid.New(),

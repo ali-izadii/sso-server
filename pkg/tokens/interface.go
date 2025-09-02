@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/go-jose/go-jose/v3"
 	"github.com/google/uuid"
 )
 
@@ -133,7 +134,7 @@ type TokenFactory interface {
 }
 
 type JWTConfig struct {
-	SecretKey          string
+	SecretKey          []byte
 	AccessTokenExpiry  time.Duration
 	RefreshTokenExpiry time.Duration
 	Issuer             string
@@ -156,6 +157,17 @@ type PASETOConfig struct {
 	AccessTokenExpiry  time.Duration
 	RefreshTokenExpiry time.Duration
 	Issuer             string
+}
+
+type JWEConfig struct {
+	SecretKey          []byte
+	AccessTokenExpiry  time.Duration
+	RefreshTokenExpiry time.Duration
+	Issuer             string
+
+	// FIXME these types depending config to jose library. fix it by separate
+	KeyEncryption     jose.KeyAlgorithm
+	ContentEncryption jose.ContentEncryption
 }
 
 type OpaqueTokenStore interface {

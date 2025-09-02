@@ -1,4 +1,4 @@
-package jwt
+package jwe
 
 import (
 	"context"
@@ -6,12 +6,13 @@ import (
 	"sso-server/pkg/tokens"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/go-jose/go-jose/v3"
+	"github.com/go-jose/go-jose/v3/json"
 	"github.com/google/uuid"
 )
 
 type Provider struct {
-	config tokens.JWTConfig
+	config tokens.JWEConfig
 }
 
 func (p *Provider) GenerateAccessToken(ctx context.Context, req tokens.CreateTokenRequest) (string, tokens.TokenClaims, error) {
@@ -19,59 +20,63 @@ func (p *Provider) GenerateAccessToken(ctx context.Context, req tokens.CreateTok
 	now := time.Now()
 	expiresAt := now.Add(p.config.AccessTokenExpiry)
 
-	claims := &CustomJwtClaims{
+	claims := &CustomJweClaims{
 		UserID:        req.UserID,
 		ApplicationID: req.ApplicationID,
 		Email:         req.Email,
 		Scopes:        req.Scopes,
 		TokenType:     tokens.AccessTokenType,
 		TokenID:       tokenID,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ID:        tokenID.String(),
-			Subject:   req.UserID.String(),
-			Audience:  jwt.ClaimStrings{req.ApplicationID.String()},
-			Issuer:    p.config.Issuer,
-			IssuedAt:  jwt.NewNumericDate(now),
-			ExpiresAt: jwt.NewNumericDate(expiresAt),
-			NotBefore: jwt.NewNumericDate(now),
-		},
+		Subject:       req.UserID.String(),
+		Issuer:        p.config.Issuer,
+		ID:            tokenID.String(),
+		IssuedAt:      now,
+		ExpiresAt:     expiresAt,
+		NotBefore:     now,
+		Audience:      []string{req.ApplicationID.String()},
 	}
 
-	tokenString, err := p.signToken(claims)
+	tokenString, err := p.encryptToken(claims)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to sign access token: %w", err)
+		return "", nil, fmt.Errorf("failed to encrypt access token: %w", err)
 	}
 
 	return tokenString, claims, nil
 }
 
-func (p *Provider) signToken(claims *CustomJwtClaims) (string, error) {
-	var method jwt.SigningMethod
-	switch p.config.Algorithm {
-	case "HS256", "":
-		method = jwt.SigningMethodHS256
-	case "HS384":
-		method = jwt.SigningMethodHS384
-	case "HS512":
-		method = jwt.SigningMethodHS512
-	default:
-		return "", fmt.Errorf("unsupported signing algorithm: %s", p.config.Algorithm)
+func (p *Provider) encryptToken(claims *CustomJweClaims) (string, error) {
+	// Marshal claims to JSON
+	payload, err := json.Marshal(claims)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal claims: %w", err)
 	}
 
-	token := jwt.NewWithClaims(method, claims)
-
-	if keyID := p.getKeyID(); keyID != "" {
-		token.Header["kid"] = keyID
+	// Create encrypter with the configured algorithms
+	encrypter, err := jose.NewEncrypter(
+		p.config.ContentEncryption,
+		jose.Recipient{
+			Algorithm: p.config.KeyEncryption,
+			Key:       p.config.SecretKey,
+		},
+		(&jose.EncrypterOptions{}).WithType("JWE").WithContentType("JWT"),
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to create encrypter: %w", err)
 	}
 
-	return token.SignedString([]byte(p.config.SecretKey))
-}
+	// Encrypt the payload
+	object, err := encrypter.Encrypt(payload)
+	if err != nil {
+		return "", fmt.Errorf("failed to encrypt payload: %w", err)
+	}
 
-func (p *Provider) getKeyID() string {
-	// This is a placeholder for key ID generation
-	// In a production environment, you might want to implement proper key rotation
-	// and return the current key ID
-	return ""
+	// Serialize to compact format
+	token, err := object.CompactSerialize()
+	if err != nil {
+		return "", fmt.Errorf("failed to serialize encrypted token: %w", err)
+	}
+
+	return token, nil
 }
 
 func (p *Provider) GenerateRefreshToken(ctx context.Context, req tokens.CreateTokenRequest, accessTokenID uuid.UUID) (string, tokens.TokenClaims, error) {
@@ -110,5 +115,6 @@ func (p *Provider) GetTokenExpiry(tokenType tokens.TokenType) time.Duration {
 }
 
 func (p *Provider) GetProviderType() tokens.TokenProviderType {
-	return tokens.TokenProviderJWT
+	//TODO implement me
+	panic("implement me")
 }
