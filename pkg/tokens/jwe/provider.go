@@ -1,7 +1,6 @@
 package jwe
 
 import (
-	"context"
 	"fmt"
 	"sso-server/pkg/tokens"
 	"time"
@@ -15,7 +14,7 @@ type Provider struct {
 	config tokens.JWEConfig
 }
 
-func (p *Provider) GenerateAccessToken(ctx context.Context, req tokens.CreateTokenRequest) (string, tokens.TokenClaims, error) {
+func (p *Provider) GenerateAccessToken(req tokens.CreateTokenRequest) (string, tokens.TokenClaims, error) {
 	tokenID := uuid.New()
 	now := time.Now()
 	expiresAt := now.Add(p.config.AccessTokenExpiry)
@@ -79,27 +78,22 @@ func (p *Provider) encryptToken(claims *CustomJweClaims) (string, error) {
 	return token, nil
 }
 
-func (p *Provider) GenerateRefreshToken(ctx context.Context, req tokens.CreateTokenRequest, accessTokenID uuid.UUID) (string, tokens.TokenClaims, error) {
+func (p *Provider) GenerateRefreshToken(req tokens.CreateTokenRequest, accessTokenID uuid.UUID) (string, tokens.TokenClaims, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (p *Provider) ValidateToken(ctx context.Context, tokenString string) (tokens.TokenClaims, error) {
+func (p *Provider) ValidateAccessToken(tokenString string) (tokens.TokenClaims, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (p *Provider) ValidateAccessToken(ctx context.Context, tokenString string) (tokens.TokenClaims, error) {
+func (p *Provider) ValidateRefreshToken(tokenString string) (tokens.TokenClaims, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (p *Provider) ValidateRefreshToken(ctx context.Context, tokenString string) (tokens.TokenClaims, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (p *Provider) GetTokenInfo(ctx context.Context, tokenString string) (tokens.TokenValidationResult, error) {
+func (p *Provider) GetTokenInfo(tokenString string) (tokens.TokenValidationResult, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -109,12 +103,6 @@ func (p *Provider) ExtractClaimsWithoutValidation(tokenString string) (tokens.To
 	panic("implement me")
 }
 
-func (p *Provider) GetTokenExpiry(tokenType tokens.TokenType) time.Duration {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (p *Provider) GetProviderType() tokens.TokenProviderType {
-	//TODO implement me
-	panic("implement me")
+	return tokens.TokenProviderJWE
 }

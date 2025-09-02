@@ -2,7 +2,6 @@ package tokens
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/go-jose/go-jose/v3"
@@ -58,39 +57,19 @@ type TokenValidationResult struct {
 	Error  error
 }
 
-var (
-	ErrTokenExpired      = errors.New("token expired")
-	ErrTokenInvalid      = errors.New("token invalid")
-	ErrTokenRevoked      = errors.New("token revoked")
-	ErrTokenExpiredError = errors.New("token expired")
-	ErrTokenInvalidError = errors.New("token invalid")
-	ErrTokenRevokedError = errors.New("token revoked")
-	ErrTokenNotFound     = errors.New("token not found")
-	ErrInvalidSignature  = errors.New("invalid token signature")
-	ErrInvalidClaims     = errors.New("invalid token claims")
-	ErrInvalidTokenType  = errors.New("invalid token type")
-	ErrProviderNotFound  = errors.New("provider not found")
-	ErrInvalidConfig     = errors.New("invalid configuration")
-	ErrInsufficientScope = errors.New("insufficient scope")
-)
-
 type TokenProvider interface {
 	// GenerateAccessToken Token Generation
-	GenerateAccessToken(ctx context.Context, req CreateTokenRequest) (string, TokenClaims, error)
+	GenerateAccessToken(req CreateTokenRequest) (string, TokenClaims, error)
 	// GenerateRefreshToken  Refresh Token Generation
-	GenerateRefreshToken(ctx context.Context, req CreateTokenRequest, accessTokenID uuid.UUID) (string, TokenClaims, error)
-	// ValidateToken Token Validation
-	ValidateToken(ctx context.Context, tokenString string) (TokenClaims, error)
+	GenerateRefreshToken(req CreateTokenRequest, accessTokenID uuid.UUID) (string, TokenClaims, error)
 	// ValidateAccessToken Access Token Validation
-	ValidateAccessToken(ctx context.Context, tokenString string) (TokenClaims, error)
+	ValidateAccessToken(tokenString string) (TokenClaims, error)
 	// ValidateRefreshToken  Refresh Token Validation
-	ValidateRefreshToken(ctx context.Context, tokenString string) (TokenClaims, error)
+	ValidateRefreshToken(tokenString string) (TokenClaims, error)
 	// GetTokenInfo Token Information
-	GetTokenInfo(ctx context.Context, tokenString string) (TokenValidationResult, error)
+	GetTokenInfo(tokenString string) (TokenValidationResult, error)
 	// ExtractClaimsWithoutValidation GetTokenInfo Token Information
 	ExtractClaimsWithoutValidation(tokenString string) (TokenClaims, error)
-	// GetTokenExpiry Token Properties
-	GetTokenExpiry(tokenType TokenType) time.Duration
 	// GetProviderType Token Properties
 	GetProviderType() TokenProviderType
 }
@@ -149,7 +128,6 @@ type OpaqueConfig struct {
 	TokenLength        int
 	AccessTokenExpiry  time.Duration
 	RefreshTokenExpiry time.Duration
-	DatabaseStore      OpaqueTokenStore
 }
 
 type PASETOConfig struct {
@@ -170,7 +148,7 @@ type JWEConfig struct {
 	ContentEncryption jose.ContentEncryption
 }
 
-type OpaqueTokenStore interface {
+type TokenStore interface {
 	StoreToken(ctx context.Context, token string, claims *TokenClaims, expiresAt time.Time) error
 	GetTokenClaims(ctx context.Context, token string) (*TokenClaims, error)
 	RevokeToken(ctx context.Context, token string) error
