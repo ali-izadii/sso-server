@@ -2,6 +2,7 @@ package tokens
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,6 +20,10 @@ type CreateTokenRequest struct {
 	ApplicationID uuid.UUID
 	Scopes        []string
 	Email         string
+}
+
+func (req *CreateTokenRequest) Validate() error {
+	return nil
 }
 
 type TokenClaims interface {
@@ -47,43 +52,42 @@ type TokenPair struct {
 }
 
 type TokenValidationResult struct {
-	Valid         bool
-	Claims        TokenClaims
-	Error         string
-	ExpiresAt     time.Time
-	TokenType     TokenType
-	UserID        uuid.UUID
-	ApplicationID uuid.UUID
-	Scopes        []string
+	Valid  bool
+	Claims TokenClaims
+	Error  error
 }
 
-type TokenError struct {
-	Code    string
-	Message string
-	Cause   error
-}
-
-const (
-	ErrTokenExpired = "TOKEN_EXPIRED"
-	ErrTokenInvalid = "TOKEN_INVALID"
-	ErrTokenRevoked = "TOKEN_REVOKED"
+var (
+	ErrTokenExpired      = errors.New("token expired")
+	ErrTokenInvalid      = errors.New("token invalid")
+	ErrTokenRevoked      = errors.New("token revoked")
+	ErrTokenExpiredError = errors.New("token expired")
+	ErrTokenInvalidError = errors.New("token invalid")
+	ErrTokenRevokedError = errors.New("token revoked")
+	ErrTokenNotFound     = errors.New("token not found")
+	ErrInvalidSignature  = errors.New("invalid token signature")
+	ErrInvalidClaims     = errors.New("invalid token claims")
+	ErrInvalidTokenType  = errors.New("invalid token type")
+	ErrProviderNotFound  = errors.New("provider not found")
+	ErrInvalidConfig     = errors.New("invalid configuration")
+	ErrInsufficientScope = errors.New("insufficient scope")
 )
 
 type TokenProvider interface {
 	// GenerateAccessToken Token Generation
-	GenerateAccessToken(req CreateTokenRequest) (string, *TokenClaims, error)
+	GenerateAccessToken(ctx context.Context, req CreateTokenRequest) (string, TokenClaims, error)
 	// GenerateRefreshToken  Refresh Token Generation
-	GenerateRefreshToken(req CreateTokenRequest, accessTokenID uuid.UUID) (string, *TokenClaims, error)
+	GenerateRefreshToken(ctx context.Context, req CreateTokenRequest, accessTokenID uuid.UUID) (string, TokenClaims, error)
 	// ValidateToken Token Validation
-	ValidateToken(tokenString string) (*TokenClaims, error)
+	ValidateToken(ctx context.Context, tokenString string) (TokenClaims, error)
 	// ValidateAccessToken Access Token Validation
-	ValidateAccessToken(tokenString string) (*TokenClaims, error)
+	ValidateAccessToken(ctx context.Context, tokenString string) (TokenClaims, error)
 	// ValidateRefreshToken  Refresh Token Validation
-	ValidateRefreshToken(tokenString string) (*TokenClaims, error)
+	ValidateRefreshToken(ctx context.Context, tokenString string) (TokenClaims, error)
 	// GetTokenInfo Token Information
-	GetTokenInfo(tokenString string) (*TokenValidationResult, error)
+	GetTokenInfo(ctx context.Context, tokenString string) (TokenValidationResult, error)
 	// ExtractClaimsWithoutValidation GetTokenInfo Token Information
-	ExtractClaimsWithoutValidation(tokenString string) (*TokenClaims, error)
+	ExtractClaimsWithoutValidation(tokenString string) (TokenClaims, error)
 	// GetTokenExpiry Token Properties
 	GetTokenExpiry(tokenType TokenType) time.Duration
 	// GetProviderType Token Properties
@@ -134,6 +138,10 @@ type JWTConfig struct {
 	RefreshTokenExpiry time.Duration
 	Issuer             string
 	Algorithm          string
+}
+
+func (config *JWTConfig) Validate() error {
+	return nil
 }
 
 type OpaqueConfig struct {
