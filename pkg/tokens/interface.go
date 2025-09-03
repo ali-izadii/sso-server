@@ -32,7 +32,7 @@ type TokenClaims interface {
 	GetEmail() string
 	GetScopes() []string
 	GetTokenType() TokenType
-	GetTokenID() uuid.UUID
+	GetTokenID() *uuid.UUID
 	GeTokenExpirationTime() time.Time
 	GetTokenIssuedAt() time.Time
 	IsExpired() bool
@@ -60,8 +60,8 @@ type TokenValidationResult struct {
 type TokenProvider interface {
 	// GenerateAccessToken Token Generation
 	GenerateAccessToken(req CreateTokenRequest) (string, TokenClaims, error)
-	// GenerateRefreshToken  Refresh Token Generation
-	GenerateRefreshToken(req CreateTokenRequest, accessTokenID uuid.UUID) (string, TokenClaims, error)
+	// GenerateRefreshTokenFromAccessToken Refresh Token Generation
+	GenerateRefreshTokenFromAccessToken(accessTokenClaims TokenClaims) (string, TokenClaims, error)
 	// ValidateAccessToken Access Token Validation
 	ValidateAccessToken(tokenString string) (TokenClaims, error)
 	// ValidateRefreshToken  Refresh Token Validation

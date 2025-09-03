@@ -51,8 +51,11 @@ func (c *CustomJweClaims) GetTokenType() tokens.TokenType {
 	return c.TokenType
 }
 
-func (c *CustomJweClaims) GetTokenID() uuid.UUID {
-	return c.TokenID
+func (c *CustomJweClaims) GetTokenID() *uuid.UUID {
+	if c.TokenID == uuid.Nil {
+		return nil
+	}
+	return &c.TokenID
 }
 
 func (c *CustomJweClaims) GeTokenExpirationTime() time.Time {

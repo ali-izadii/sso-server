@@ -78,7 +78,7 @@ func (p *Provider) encryptToken(claims *CustomJweClaims) (string, error) {
 	return token, nil
 }
 
-func (p *Provider) GenerateRefreshToken(req tokens.CreateTokenRequest, accessTokenID uuid.UUID) (string, tokens.TokenClaims, error) {
+func (p *Provider) GenerateRefreshTokenFromAccessToken(accessTokenClaims tokens.TokenClaims) (string, tokens.TokenClaims, error) {
 	//TODO implement me
 	panic("implement me")
 }
