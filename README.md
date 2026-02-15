@@ -223,9 +223,13 @@ sso-server/
 ├── cmd/
 │   └── server/
 │       └── main.go           # Application entry point
+├── config/
+│   ├── config.local.yaml     # Local development config
+│   ├── config.dev.yaml       # Development environment config
+│   └── config.prod.yaml      # Production config
 ├── internal/
 │   ├── config/
-│   │   └── config.go         # Configuration management
+│   │   └── config.go         # Configuration management (Viper)
 │   ├── handler/
 │   │   ├── auth.go           # Authentication handlers
 │   │   ├── user.go           # User handlers
@@ -261,16 +265,59 @@ sso-server/
 
 ## Configuration
 
-Environment variables:
+Configuration is managed using [Viper](https://github.com/spf13/viper) with YAML config files.
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| PORT | Server port | 8080 |
-| DATABASE_URL | Database connection string | sqlite://sso.db |
-| JWT_SECRET | Secret key for JWT signing | (required) |
-| JWT_EXPIRY | Access token expiry duration | 1h |
-| REFRESH_TOKEN_EXPIRY | Refresh token expiry duration | 7d |
-| AUTH_CODE_EXPIRY | Authorization code expiry | 10m |
+### Config Files
+
+| File | Environment | Description |
+|------|-------------|-------------|
+| `config/config.local.yaml` | local | Local development with SQLite |
+| `config/config.dev.yaml` | dev | Development with PostgreSQL |
+| `config/config.prod.yaml` | prod | Production settings |
+
+### Environment Selection
+
+Set `APP_ENV` to select the config file:
+
+```bash
+APP_ENV=local   # loads config.local.yaml (default)
+APP_ENV=dev     # loads config.dev.yaml
+APP_ENV=prod    # loads config.prod.yaml
+```
+
+### Config Structure
+
+```yaml
+server:
+  port: 8080
+  host: localhost
+
+database:
+  driver: sqlite          # sqlite or postgres
+  dsn: sso.db             # connection string
+
+jwt:
+  secret: your-secret-key # required
+  expiry: 1h              # access token expiry
+  refresh_expiry: 168h    # refresh token expiry (7 days)
+
+oauth:
+  auth_code_expiry: 10m   # authorization code expiry
+
+log:
+  level: debug            # debug, info, warn, error
+  format: text            # text or json
+```
+
+### Environment Variable Override
+
+Environment variables override config file values. Use underscore-separated uppercase names:
+
+| Variable | Config Key |
+|----------|------------|
+| `SERVER_PORT` | `server.port` |
+| `DATABASE_DSN` | `database.dsn` |
+| `JWT_SECRET` | `jwt.secret` |
 
 ## Getting Started
 
@@ -281,13 +328,16 @@ Environment variables:
 ### Running the Server
 
 ```bash
-# Set required environment variables
-export JWT_SECRET="your-secret-key"
-
-# Run the server
+# Run with local config (default)
 go run cmd/server/main.go
 
-# Or build and run
+# Run with specific environment
+APP_ENV=dev go run cmd/server/main.go
+
+# Override config with environment variables
+JWT_SECRET=my-secret APP_ENV=prod go run cmd/server/main.go
+
+# Build and run
 go build -o sso-server cmd/server/main.go
 ./sso-server
 ```

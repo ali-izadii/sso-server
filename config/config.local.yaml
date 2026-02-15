@@ -1,0 +1,19 @@
+server:
+  port: 8080
+  host: localhost
+
+database:
+  driver: sqlite
+  dsn: sso.db
+
+jwt:
+  secret: local-secret-key-change-in-production
+  expiry: 1h
+  refresh_expiry: 168h  # 7 days
+
+oauth:
+  auth_code_expiry: 10m
+
+log:
+  level: debug
+  format: text

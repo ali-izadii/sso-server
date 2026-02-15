@@ -2,16 +2,17 @@ package main
 
 import (
 	"log"
-	"os"
+
+	"github.com/ali/sso-server/internal/config"
 )
 
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	log.Printf("SSO Server starting on port %s", port)
+	log.Printf("SSO Server starting on %s:%s [env=%s]", cfg.Server.Host, cfg.Server.Port, config.GetEnv())
 
 	// TODO: Initialize database
 	// TODO: Initialize services

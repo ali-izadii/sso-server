@@ -1,0 +1,19 @@
+server:
+  port: 8080
+  host: 0.0.0.0
+
+database:
+  driver: postgres
+  dsn: postgres://sso_user:sso_pass@localhost:5432/sso_dev?sslmode=disable
+
+jwt:
+  secret: dev-secret-key-change-in-production
+  expiry: 1h
+  refresh_expiry: 168h  # 7 days
+
+oauth:
+  auth_code_expiry: 10m
+
+log:
+  level: debug
+  format: json
