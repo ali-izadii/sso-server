@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/ali/sso-server/internal/config"
+	"github.com/ali/sso-server/internal/server"
 )
 
 func main() {
@@ -14,8 +15,8 @@ func main() {
 
 	log.Printf("SSO Server starting on %s:%s [env=%s]", cfg.Server.Host, cfg.Server.Port, config.GetEnv())
 
-	// TODO: Initialize database
-	// TODO: Initialize services
-	// TODO: Initialize handlers
-	// TODO: Start HTTP server
+	srv := server.New(cfg)
+	if err := srv.Start(); err != nil {
+		log.Fatalf("Server error: %v", err)
+	}
 }
