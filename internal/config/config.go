@@ -40,6 +40,7 @@ type OAuthConfig struct {
 type LogConfig struct {
 	Level  string
 	Format string
+	File   string
 }
 
 func Load() (*Config, error) {

@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/ali/sso-server/internal/config"
 	"github.com/ali/sso-server/internal/handler"
+	"github.com/ali/sso-server/pkg/logger"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -21,20 +23,15 @@ type Server struct {
 	config *config.Config
 }
 
-func New(cfg *config.Config) *Server {
+func New(cfg *config.Config) (*Server, error) {
 	e := echo.New()
 	e.HideBanner = true
+
+	log := logger.Get()
 
 	// Middleware
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())
-
-	var logger *slog.Logger
-	if cfg.Log.Format == "json" {
-		logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	} else {
-		logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
-	}
 
 	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 		LogStatus:   true,
@@ -45,14 +42,14 @@ func New(cfg *config.Config) *Server {
 		HandleError: true,
 		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
 			if v.Error == nil {
-				logger.LogAttrs(context.Background(), slog.LevelInfo, "REQUEST",
+				log.LogAttrs(context.Background(), slog.LevelInfo, "REQUEST",
 					slog.String("method", v.Method),
 					slog.String("uri", v.URI),
 					slog.Int("status", v.Status),
 					slog.Duration("latency", v.Latency),
 				)
 			} else {
-				logger.LogAttrs(context.Background(), slog.LevelError, "REQUEST_ERROR",
+				log.LogAttrs(context.Background(), slog.LevelError, "REQUEST_ERROR",
 					slog.String("method", v.Method),
 					slog.String("uri", v.URI),
 					slog.Int("status", v.Status),
@@ -77,22 +74,26 @@ func New(cfg *config.Config) *Server {
 	return &Server{
 		echo:   e,
 		config: cfg,
-	}
+	}, nil
 }
 
 func (s *Server) Start() error {
 	addr := fmt.Sprintf("%s:%s", s.config.Server.Host, s.config.Server.Port)
 
+	logger.Info("server starting", "address", addr)
+
 	// Graceful shutdown
 	go func() {
-		if err := s.echo.Start(addr); err != nil && err != http.ErrServerClosed {
-			s.echo.Logger.Fatal("shutting down the server")
+		if err := s.echo.Start(addr); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logger.Error("server error", "error", err)
 		}
 	}()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
+
+	logger.Info("server shutting down")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

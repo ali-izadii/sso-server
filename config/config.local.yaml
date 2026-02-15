@@ -17,3 +17,4 @@ oauth:
 log:
   level: debug
   format: text
+  file: logs/sso.log

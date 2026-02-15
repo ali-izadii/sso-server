@@ -5,6 +5,7 @@ import (
 
 	"github.com/ali/sso-server/internal/config"
 	"github.com/ali/sso-server/internal/server"
+	"github.com/ali/sso-server/pkg/logger"
 )
 
 func main() {
@@ -13,10 +14,24 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	log.Printf("SSO Server starting on %s:%s [env=%s]", cfg.Server.Host, cfg.Server.Port, config.GetEnv())
+	// Initialize global logger
+	err = logger.Init(logger.Config{
+		Level:  cfg.Log.Level,
+		Format: cfg.Log.Format,
+		File:   cfg.Log.File,
+	})
+	if err != nil {
+		log.Fatalf("Failed to initialize logger: %v", err)
+	}
 
-	srv := server.New(cfg)
+	logger.Info("config loaded", "env", config.GetEnv())
+
+	srv, err := server.New(cfg)
+	if err != nil {
+		logger.Fatal("failed to create server", "error", err)
+	}
+
 	if err := srv.Start(); err != nil {
-		log.Fatalf("Server error: %v", err)
+		logger.Fatal("server error", "error", err)
 	}
 }

@@ -17,3 +17,4 @@ oauth:
 log:
   level: info
   format: json
+  file: /var/log/sso/sso.log
